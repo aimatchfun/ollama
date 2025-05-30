@@ -1,12 +1,16 @@
-# Use an official Ollama base image
-FROM ollama/ollama:latest
+# Use an official Ollama base image with specific version
+FROM ollama/ollama:0.1.27
 
 # Expose the port Ollama uses
 EXPOSE 11434
 
-# Install models
-RUN ollama pull aimatch/promptgen:llama32
-RUN ollama pull benevolentjoker/nsfwmonika
+# Install official models in a single layer
+RUN ollama pull llama2 && \
+    ollama pull mistral
 
-# Command to run when the container starts
-CMD ollama serve
+# Add healthcheck to verify the service is running
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:11434/api/tags || exit 1
+
+# Use ollama as the entrypoint
+ENTRYPOINT ["ollama"]
